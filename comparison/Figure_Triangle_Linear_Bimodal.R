@@ -61,9 +61,7 @@ Xmodel = unscale(train$df_orig, sampleObs(thetaNN_l, A=train$A, 25000))$numpy()
 XDGP = dgp(25000, dat_train = train$df_orig)$df_orig$numpy()
 #Xref <- as.matrix(read_csv("data/VACA1_triangle_lin/carefl/VACA1_triangle_LIN_XobsModel.csv", col_names = FALSE))
   
-# See https://chat.openai.com/share/c5cdb416-44c8-4819-9d07-f021bfa151d2 
-# Manually set the colors
-
+## Execute for NSF
 Xref <- as.matrix(read_csv("data/VACA1_triangle_lin/NSF/VACA1_triangle_LIN_XobsModel.csv", col_names = FALSE))
 names <- c("Ours", "NSF", "DGP")  
 custom_colors <- c("Ours" = "#1E88E5", "NSF" = "#FFC107", "DGP" = "red") 
@@ -140,11 +138,13 @@ createPlotMatrix <- function(data, type_col, var_names,text_size = 20, axis_titl
 
 # Sample function call
 #library(cowplot)
-g = createPlotMatrix(all_data, "Type", c("X1", "X2", "X3"))
+g = createPlotMatrix(all_data, "Type", c("X1", "X2", "X3"), text_size = 18*1.5, axis_title_size=18*1.5)
 g
 ggsave(make_fn("observations.pdf"))
+#ggsave(make_fn("observations_NSF.pdf"))
 if (FALSE){
   file.copy(make_fn("observations.pdf"), '~/Dropbox/Apps/Overleaf/tramdag/figures/', overwrite = TRUE)
+  file.copy(make_fn("observations_NSF.pdf"), '~/Dropbox/Apps/Overleaf/tramdag/figures/', overwrite = TRUE)
 }
 
 ####### L2 Do Interventions on X2 #####################
