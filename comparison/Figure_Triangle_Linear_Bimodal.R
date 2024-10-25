@@ -1,6 +1,6 @@
 #### Local Configuration to savely load tensorflow and tfp ####
-##### Oliver's MAC ####
-reticulate::use_python("/Users/oli/miniforge3/envs/r-tensorflow/bin/python3.8", required = TRUE)
+##### Mr. Brown's MAC ####
+reticulate::use_python("~/miniforge3/envs/r-tensorflow/bin/python3.8", required = TRUE)
 library(reticulate)
 reticulate::py_config()
 library(tfprobability)
