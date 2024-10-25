@@ -36,7 +36,6 @@ EPOCHS = 10000
 nTrain = 2500L
 SUFFIX = sprintf("run_VACA%d_triangle_%s_M%d_E%d_nTrain%d", VACA, TYPE, M, EPOCHS, nTrain)
 
-DROPBOX = '~/Dropbox/__ZHAW/__Projekte_Post_ZHAH/shared_Oliver_Beate/Causality_2022/tram_DAG/' #Location of data and trained weights
 DROPBOX = 'comparison/' #Location of data and trained weights
 
 if (rstudioapi::isAvailable()) {
