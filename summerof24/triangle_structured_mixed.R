@@ -33,7 +33,7 @@ source('summerof24/utils_tfp.R')
 ##### Flavor of experiment ######
 
 #### Saving the current version of the script into runtime
-DIR = 'summerof24/runs/triangle_structured_mixed/run_small_net'
+DIR = 'summerof24/runs/triangle_structured_mixed/run'
 if (!dir.exists(DIR)) {
   dir.create(DIR, recursive = TRUE)
 }

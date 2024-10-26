@@ -10,7 +10,7 @@ The code to reproduce Figures for the L1 and L2 comparison on the VACA dataset i
 `Figure_Triangle_Linear_Bimodal.R`.
 
 ### Figures comparing to Carfel
-TODO
+
 
 ## Simulation study
 The code to reproduce the simulation study is in the folder `summerof24`.

@@ -34,7 +34,7 @@ source('summerof24/utils_tfp.R')
 ##### Flavor of experiment ######
 
 #### Saving the current version of the script into runtime
-DIR = 'summerof24/runs/triangle_structured_continous/run_nodes25'
+DIR = 'summerof24/runs/triangle_structured_continous/run'
 if (!dir.exists(DIR)) {
   dir.create(DIR, recursive = TRUE)
 }
