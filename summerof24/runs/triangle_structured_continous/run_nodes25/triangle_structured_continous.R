@@ -7,7 +7,7 @@ reticulate::py_config()
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {  # if not called via sh
   args <- c(1, 'ls') #
-  args <- c(4, 'cs') # For figure XXX in the paper
+  args <- c(3, 'cs') # For figure XXX in the paper
 }
 F32 <- as.numeric(args[1])
 M32 <- args[2]
@@ -315,7 +315,7 @@ if (FALSE){
   file_name <- paste0(fn, "_coef_epoch.pdf")
   # Save the plot
   ggsave(file_name, plot = p, width = 8, height = 6)
-  file_path <- file.path("/Users/oli/Library/CloudStorage/Dropbox/Apps/Overleaf/tramdag/figures", basename(file_name))
+  file_path <- file.path("~/Library/CloudStorage/Dropbox/Apps/Overleaf/tramdag/figures", basename(file_name))
   ggsave(file_path, plot = p, width = 8/2, height = 6/2)
 }
 
@@ -347,12 +347,6 @@ h_I = r$h_I
 
 ##### X1
 
-fit.1 = Colr(X1~1,df, order=len_theta)
-plot(fit.1, which = 'baseline only', main='Black: COLR, Red: Our Model')
-lines(Xs[,1], h_I[,1], col='red', lty=2, lwd=3)
-rug(train$df_orig$numpy()[,1], col='blue')
-
-
 df = data.frame(train$df_orig$numpy())
 fit.21 = Colr(X2~X1,df, order=len_theta)
 temp = model.frame(fit.21)[1:2,-1, drop=FALSE] #WTF!
@@ -369,21 +363,6 @@ plot(fit.312, which = 'baseline only', newdata = temp, lwd=2, col='blue',
 lines(Xs[,3], h_I[,3], col='red', lty=2, lwd=5)
 rug(train$df_orig$numpy()[,3], col='blue')
 
-
-if (FALSE){
-  # Check the derivatives of h w.r.t. x
-  x <- tf$ones(shape = c(10L, 3L)) #B,P
-  with(tf$GradientTape(persistent = TRUE) %as% tape, {
-    tape$watch(x)
-    y <- param_model(x)
-  })
-  d <- tape$jacobian(y, x)
-  for (k in 1:(2+len_theta)){ #k = 1
-    print(k) #B,P,k,B,P
-    B = 1
-    print(d[B,,k,B,]) #
-  }
-}
 
 ##### Checking observational distribution ####
 library(car)
@@ -411,40 +390,6 @@ dx7 = dgp(10000, doX=doX, seed=SEED)
 #hist(dx0.2$df_orig$numpy()[,2], freq=FALSE,100)
 mean(dx7$df_orig$numpy()[,2]) - mean(dx0.2$df_orig$numpy()[,2])  
 mean(dx7$df_orig$numpy()[,3]) - mean(dx0.2$df_orig$numpy()[,3])  
-
-########### Do(x1) seems to work#####
-
-#### Check intervention distribution after do(X1=0.2)
-df = data.frame(train$df_orig$numpy())
-fit.x2 = Colr(X2~X1,df)
-x2_dense = predict(fit.x2, newdata = data.frame(X1 = 0.2), type = 'density')
-x2s = as.numeric(rownames(x2_dense))
-
-## samples from x2 under do(x1=0.2) via simulate
-ddd = as.numeric(unlist(simulate(fit.x2, newdata = data.frame(X1 = 0.2), nsim = 1000)))
-s2_colr = rep(NA, length(ddd))
-for (i in 1:length(ddd)){
-  s2_colr[i] = as.numeric(ddd[[i]]) #<--TODO somethimes 
-}
-
-if(sum(is.na(s2_colr)) > 0){
-  stop("Pechgehabt mit Colr, viel Glück und nochmals!")
-}
-
-hist(dx0.2$df_orig$numpy()[,2], freq=FALSE, 100, main='Do(X1=0.2) X2',  
-     sub='Histogram from DGP with do. Blue: Colr', xlab='samples')
-lines(x2s, x2_dense, type = 'l', col='blue', lw=2)
-
-# fit.x3 = Colr(X3 ~ X1 + X2,df)
-# newdata = data.frame(
-#     X1 = rep(0.2, length(s2_colr)), 
-#     X2 = s2_colr)
-# 
-# s3_colr = rep(NA, nrow(newdata))
-# for (i in 1:nrow(newdata)){
-#   # i = 2
-#   s3_colr[i] = simulate(fit.x3, newdata = newdata[i,], nsim = 1)
-# }
 
 s_dag = do_dag_struct(param_model, train$A, doX=c(0.2, NA, NA))
 hist(dx0.2$df_orig$numpy()[,2], freq=FALSE, 50, main='X2 | Do(X1=0.2)', xlab='samples', 
@@ -483,7 +428,7 @@ for (i in 1:length(xs)){
   #Varying x2
   X = tf$constant(c(0.5, x, 3), shape=c(1L,3L)) 
   cs_23[i] = param_model(X)[1,3,1]$numpy() #1=CS Term
-  shift_23[i] = param_model(X)[1,3,2]$numpy() #2-LS Term X2-->X3 (Beate Notation)
+  shift_23[i] = param_model(X)[1,3,2]$numpy() #2-LS Term X2-->X3 (Mrs. Whites' Notation)
 }
 
 ######### Learned Transformation of f(x2) ########
@@ -504,7 +449,7 @@ if (FALSE){
       ) +
       labs(
         x = expression(x[2]),  # Subscript for x_2
-        y = "~f(x)",  # Optionally leave y-axis label blank
+        y = paste("~f(x2)"),  # Optionally leave y-axis label blank
         color = NULL  # Removes the color legend title
       ) +
       theme_minimal() +
@@ -526,11 +471,11 @@ if (FALSE){
       geom_line(aes(color = "f", y = f), ) +  # Black solid line for 'DGP'
       scale_color_manual(
         values = c("Shift Estimate" = "blue", "f" = "black"),  # Set colors
-        labels = c("Shift Estimate", "f(x)")  # Custom legend labels with expression for f(X_2)
+        labels = c("Shift Estimate", "f(x2)")  # Custom legend labels with expression for f(X_2)
       ) +
       labs(
         x = expression(x[2]),  # Subscript for x_2
-        y = "~f(x)",  # Optionally leave y-axis label blank
+        y = "~f(x2)",  # Optionally leave y-axis label blank
         color = NULL  # Removes the color legend title
       ) +
       theme_minimal() +
@@ -542,11 +487,10 @@ if (FALSE){
     print(paste0("Unknown Model ", MA[2,3]))
   }
  
-  
   file_name <- paste0(fn, "_f23_est.pdf")
   # Save the plot
   ggsave(file_name, plot = p, width = 8, height = 8)
-  file_path <- file.path("/Users/oli/Library/CloudStorage/Dropbox/Apps/Overleaf/tramdag/figures", basename(file_name))
+  file_path <- file.path("~/Library/CloudStorage/Dropbox/Apps/Overleaf/tramdag/figures", basename(file_name))
   ggsave(file_path, plot = p, width = 8/3, height = 8/3)
 }
     

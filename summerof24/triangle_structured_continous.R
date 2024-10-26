@@ -1,7 +1,9 @@
 ##### Mr Browns MAC ####
-reticulate::use_python("~/miniforge3/envs/r-tensorflow/bin/python3.8", required = TRUE)
-library(reticulate)
-reticulate::py_config()
+if (FALSE){
+  reticulate::use_python("~/miniforge3/envs/r-tensorflow/bin/python3.8", required = TRUE)
+  library(reticulate)
+  reticulate::py_config()
+}
 
 # Get command-line arguments - if called via sh
 args <- commandArgs(trailingOnly = TRUE)
@@ -428,7 +430,7 @@ for (i in 1:length(xs)){
   #Varying x2
   X = tf$constant(c(0.5, x, 3), shape=c(1L,3L)) 
   cs_23[i] = param_model(X)[1,3,1]$numpy() #1=CS Term
-  shift_23[i] = param_model(X)[1,3,2]$numpy() #2-LS Term X2-->X3 (Beate Notation)
+  shift_23[i] = param_model(X)[1,3,2]$numpy() #2-LS Term X2-->X3 (Mrs. Whites' Notation)
 }
 
 ######### Learned Transformation of f(x2) ########
