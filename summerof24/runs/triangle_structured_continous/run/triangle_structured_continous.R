@@ -1,13 +1,15 @@
 ##### Mr Browns MAC ####
-reticulate::use_python("~/miniforge3/envs/r-tensorflow/bin/python3.8", required = TRUE)
-library(reticulate)
-reticulate::py_config()
+if (FALSE){
+  reticulate::use_python("~/miniforge3/envs/r-tensorflow/bin/python3.8", required = TRUE)
+  library(reticulate)
+  reticulate::py_config()
+}
 
 # Get command-line arguments - if called via sh
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {  # if not called via sh
   args <- c(1, 'ls') #
-  args <- c(3, 'cs') # For figure XXX in the paper
+  args <- c(4, 'cs') # For figure XXX in the paper
 }
 F32 <- as.numeric(args[1])
 M32 <- args[2]
@@ -32,7 +34,7 @@ source('summerof24/utils_tfp.R')
 ##### Flavor of experiment ######
 
 #### Saving the current version of the script into runtime
-DIR = 'summerof24/runs/triangle_structured_continous/run_nodes25'
+DIR = 'summerof24/runs/triangle_structured_continous/run'
 if (!dir.exists(DIR)) {
   dir.create(DIR, recursive = TRUE)
 }
