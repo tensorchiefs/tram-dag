@@ -9,6 +9,7 @@ if (FALSE){
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {  # if not called via sh
   args <- c(1, 'ls') #
+  args <- c(1, 'cs') # Identification simple DGP complex modex
   args <- c(4, 'cs') # For figure XXX in the paper
 }
 F32 <- as.numeric(args[1])
@@ -264,16 +265,32 @@ lines(diff:epochs, train_loss[diff:epochs], type='l')
 
 #### Plotting of the Loss Curve ##########
 tail(ws)
-if (FALSE){
-  p = ggplot(ws, aes(x=1:nrow(ws))) + 
+p = ggplot(ws, aes(x=1:nrow(ws))) + 
+  geom_line(aes(y=w12, color="beta12")) + 
+  geom_line(aes(y=w13, color="beta13")) + 
+  geom_line(aes(y=w23, color="beta23")) + 
+  geom_hline(aes(yintercept=2, color="beta12"), linetype=2) +
+  geom_hline(aes(yintercept=-0.2, color="beta13"), linetype=2) +
+  geom_hline(aes(yintercept=+0.3, color="beta23"), linetype=2) +
+  scale_color_manual(
+    values=c('beta12'='skyblue', 'beta13'='red', 'beta23'='darkgreen'),
+    labels=c(expression(beta[12]), expression(beta[13]), expression(beta[23]))
+  ) +
+  labs(x='Epoch', y='Coefficients') +
+  theme_minimal() +
+  theme(
+    legend.title = element_blank(),   # Removes the legend title
+    legend.position = c(0.85, 0.25),  # Adjust this to position the legend inside the plot (lower-right)
+    legend.background = element_rect(fill="white", colour="black")  # Optional: white background with border
+  )
+if (F32 == 4){ # We don't have beta23
+  p =  ggplot(ws, aes(x=1:nrow(ws))) + 
     geom_line(aes(y=w12, color="beta12")) + 
     geom_line(aes(y=w13, color="beta13")) + 
-    geom_line(aes(y=w23, color="beta23")) + 
     geom_hline(aes(yintercept=2, color="beta12"), linetype=2) +
     geom_hline(aes(yintercept=-0.2, color="beta13"), linetype=2) +
-    geom_hline(aes(yintercept=+0.3, color="beta23"), linetype=2) +
     scale_color_manual(
-      values=c('beta12'='skyblue', 'beta13'='red', 'beta23'='darkgreen'),
+      values=c('beta12'='skyblue', 'beta13'='red'),
       labels=c(expression(beta[12]), expression(beta[13]), expression(beta[23]))
     ) +
     labs(x='Epoch', y='Coefficients') +
@@ -283,13 +300,15 @@ if (FALSE){
       legend.position = c(0.85, 0.25),  # Adjust this to position the legend inside the plot (lower-right)
       legend.background = element_rect(fill="white", colour="black")  # Optional: white background with border
     )
-  if (FALSE){
-   ### NOTE THAT WE RENAMED THE PRODUCED FILE and added the PATH due to a naming conflict (the continuous files are wrongly named mixed)
-    # Remove 'mixed' in filename
-    file_name <- gsub("mixed", "", file_name)
-    file_path <- file.path("~/Library/CloudStorage/Dropbox/Apps/Overleaf/tramdag/figures", basename(file_name))
-    ggsave(file_path, plot = p, width = 8, height = 6/2)  
-  }
+}
+p
+if (FALSE){
+ ### NOTE THAT WE RENAMED THE PRODUCED FILE and added the PATH due to a naming conflict (the continuous files are wrongly named mixed)
+  # Remove 'mixed' in filename
+  file_name <- paste0(fn, "_coef_epoch.pdf")
+  file_name <- gsub("mixed", "", file_name)
+  file_path <- file.path("~/Library/CloudStorage/Dropbox/Apps/Overleaf/tramdag/figures", basename(file_name))
+  ggsave(file_path, plot = p, width = 8, height = 6/2)  
 }
 
 if (FALSE){
@@ -321,7 +340,7 @@ if (FALSE){
   ggsave(file_path, plot = p, width = 8/2, height = 6/2)
 }
 
-param_model$evaluate(x = train$df_orig, y=train$df_scaled) #Does not work, probably TF Eager vs Compiled
+#param_model$evaluate(x = train$df_orig, y=train$df_scaled) #Does not work, probably TF Eager vs Compiled
 # One more step to estimate NLL
 if (FALSE){
   vals = NULL
@@ -340,6 +359,59 @@ fn
 len_theta
 param_model$get_layer(name = "beta")$get_weights() * param_model$get_layer(name = "beta")$mask
 
+###### Figure for paper Observational and Do intervention ######
+if (FALSE){
+  doX=c(NA, NA, NA)
+  s_obs_fitted = do_dag_struct(param_model, train$A, doX, num_samples = 5000)$numpy()
+  dx1 = -1
+  doX=c(dx1, NA, NA)
+  s_do_fitted = do_dag_struct(param_model, train$A, doX=doX)$numpy()
+  
+  df = data.frame(vals=s_obs_fitted[,1], type='Model', X=1, L='L0')
+  df = rbind(df, data.frame(vals=s_obs_fitted[,2], type='Model', X=2, L='L0'))
+  df = rbind(df, data.frame(vals=s_obs_fitted[,3], type='Model', X=3, L='L0'))
+  
+  df = rbind(df, data.frame(vals=train$df_R[,1], type='DGP', X=1, L='L0'))
+  df = rbind(df, data.frame(vals=train$df_R[,2], type='DGP', X=2, L='L0'))
+  df = rbind(df, data.frame(vals=as.numeric(train$df_R[,3]), type='DGP', X=3, L='L0'))
+  
+  df = rbind(df, data.frame(vals=s_do_fitted[,1], type='Model', X=1, L='L1'))
+  df = rbind(df, data.frame(vals=s_do_fitted[,2], type='Model', X=2, L='L1'))
+  df = rbind(df, data.frame(vals=s_do_fitted[,3], type='Model', X=3, L='L1'))
+  
+  d = dgp(10000, doX=doX)$df_R
+  df = rbind(df, data.frame(vals=d[,1], type='DGP', X=1, L='L1'))
+  df = rbind(df, data.frame(vals=d[,2], type='DGP', X=2, L='L1'))
+  df = rbind(df, data.frame(vals=as.numeric(d[,3]), type='DGP', X=3, L='L1'))
+  
+  p = ggplot() +
+    geom_histogram(data = df, 
+                   aes(x=vals, col=type, fill=type, y=..density..), 
+                   position = "identity", alpha=0.4) +
+    facet_grid(L ~ X, scales = 'free_y',
+               labeller = as_labeller(c('1' = 'X1', '2' = 'X2', '3' = 'X3', 'L1' = paste0('Do X1=', dx1), 'L0' = 'Obs'))) +
+    labs(y = "Density", x='Values') + # Update y-axis label
+    theme_minimal() +
+    theme(
+      legend.title = element_blank(),   # Removes the legend title
+      legend.position = c(0.17, 0.25),  # Adjust this to position the legend inside the plot (lower-right)
+      legend.background = element_rect(fill="white", colour="white")  # Optional: white background with border
+    ) +
+    facet_grid(L ~ X, scales = "free",
+               labeller = as_labeller(c('1' = 'X1', '2' = 'X2', '3' = 'X3', 'L1' = paste0('Do X1=', dx1), 'L0' = 'Obs'))) +
+    coord_cartesian(ylim = c(0, 2), xlim = NULL) # Adjust y-axis zoom for facets 
+  p
+  
+  file_name <- paste0(fn, "_L0_L1.pdf")
+  file_name <- gsub("mixed", "", file_name) #We have wrongly mixed in fn
+  if (FALSE){
+    file_path <- file.path("~/Library/CloudStorage/Dropbox/Apps/Overleaf/tramdag/figures", basename(file_name))
+    print(file_path)
+    ggsave(file_path, plot=p, width = 8/2, height = 6/2)
+  }
+  
+}
+
 
 #### Checking the transformation ####
 h_params = param_model(train$df_orig)
@@ -348,7 +420,6 @@ Xs = r$Xs
 h_I = r$h_I
 
 ##### X1
-
 df = data.frame(train$df_orig$numpy())
 fit.21 = Colr(X2~X1,df, order=len_theta)
 temp = model.frame(fit.21)[1:2,-1, drop=FALSE] #WTF!
@@ -470,7 +541,7 @@ if (FALSE){
     p <- ggplot(df, aes(x = x2, y = shift_23)) +
       #geom_line(aes(color = "Shift Estimate"), size = 1) +  # Blue line for 'Shift Estimate'
       geom_point(aes(color = "Shift Estimate"), size = 1) +  # Blue points for 'Shift Estimate'
-      geom_line(aes(color = "f", y = f), ) +  # Black solid line for 'DGP'
+      geom_line(aes(color = "f", y = f), size=0.5) +  # Black solid line for 'DGP'
       scale_color_manual(
         values = c("Shift Estimate" = "blue", "f" = "black"),  # Set colors
         labels = c("Shift Estimate", "f(x2)")  # Custom legend labels with expression for f(X_2)
@@ -493,7 +564,7 @@ if (FALSE){
   # Save the plot
   ggsave(file_name, plot = p, width = 8, height = 8)
   file_path <- file.path("~/Library/CloudStorage/Dropbox/Apps/Overleaf/tramdag/figures", basename(file_name))
-  ggsave(file_path, plot = p, width = 8/3, height = 8/3)
+  ggsave(file_path, plot = p, width = 1.6*6/3, height = 6/3)
 }
     
 
